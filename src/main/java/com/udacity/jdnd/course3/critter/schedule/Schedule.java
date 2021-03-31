@@ -16,14 +16,6 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ElementCollection
-    @OrderColumn
-    private List<Long> employeeIds;
-
-    @ElementCollection
-    @OrderColumn
-    private List<Long> petIds;
-
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL)
     private List<Employee> employees;
 
@@ -41,22 +33,6 @@ public class Schedule {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public List<Long> getEmployeeIds() {
-        return employeeIds;
-    }
-
-    public void setEmployeeIds(List<Long> employeeIds) {
-        this.employeeIds = employeeIds;
-    }
-
-    public List<Long> getPetIds() {
-        return petIds;
-    }
-
-    public void setPetIds(List<Long> petIds) {
-        this.petIds = petIds;
     }
 
     public LocalDate getDate() {

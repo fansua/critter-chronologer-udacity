@@ -19,6 +19,7 @@ public class Customer {
     private String notes;
 
     @ElementCollection
+    @OrderColumn
     private List<Long> petIds;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.MERGE)

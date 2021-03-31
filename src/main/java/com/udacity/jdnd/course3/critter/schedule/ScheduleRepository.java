@@ -5,7 +5,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule,Long> {
-    //List<Schedule> getAllByPetsId(long id);
-   // List<Schedule> getAllByEmployeesId(long id);
-    //List<Schedule> getAllByPetsByCustomerContainingCustomersId(long id);
 }

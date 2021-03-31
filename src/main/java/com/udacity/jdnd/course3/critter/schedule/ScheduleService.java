@@ -14,9 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
+@Transactional
 public class ScheduleService {
 
     @Autowired
@@ -31,22 +31,24 @@ public class ScheduleService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    public Schedule save(Schedule schedule){
+    public Schedule save(Schedule schedule, List<Long> employeesIds, List<Long> petIds){
+        List<Pet> pets = petRepository.findAllById(petIds);
+        List<Employee> employees = employeeRepository.findAllById(employeesIds);
+        schedule.setPets(pets);
+        schedule.setEmployees(employees);
         return scheduleRepository.save(schedule);
     }
 
     public List<Schedule> getAllSchedules(){
-        return StreamSupport.stream(scheduleRepository.findAll().spliterator(),false).collect(Collectors.toList());
+        List<Schedule> lst = scheduleRepository.findAll();
+        return lst;
     }
 
     public List<Schedule> getScheduleByPetId(Long petId){
-        System.out.println("ped ID" + petId);
         Optional<Pet> optionalPet = petRepository.findById(petId);
         if(optionalPet.isPresent()){
-            System.out.println("Did I get inside the optional");
             Pet pet = optionalPet.get();
             List<Schedule> sc= scheduleRepository.findAll().stream().filter( schedule -> schedule.getPets().contains(pet)).collect(Collectors.toList());
-            System.out.println("LST SCh " +sc);
             return sc;
         }
         return new ArrayList<Schedule>();
@@ -54,20 +56,26 @@ public class ScheduleService {
 
     @Transactional
     public List<Schedule> getScheduleByEmployeeId(Long employeeId){
-        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
-        if(optionalEmployee.isPresent()){
-            Employee employee = optionalEmployee.get();
-            return scheduleRepository.findAll().stream().filter( schedule -> schedule.getEmployees().contains(employee)).collect(Collectors.toList());
-        }
-        return new ArrayList<Schedule>();
+
+        Employee e = employeeRepository.getOne(employeeId);
+        List<Schedule> sch=  scheduleRepository.findAll()
+                .stream()
+                .filter(schedule -> schedule.getEmployees().contains(e))
+                .collect(Collectors.toList());
+        return sch ;
     }
 
     public List<Schedule> getScheduleCustomerId(Long customerId){
+
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if(optionalCustomer.isPresent()){
             Customer customer = optionalCustomer.get();
-            return scheduleRepository.findAll().stream().filter( schedule -> schedule.getPets().containsAll(customer.getPets())).collect(Collectors.toList());
+            return scheduleRepository.findAll()
+                    .stream()
+                    .filter(schedule -> schedule.getPets().size()  == customer.getPetIds().size())
+                    .collect(Collectors.toList());
         }
         return new ArrayList<Schedule>();
+
     }
 }

@@ -1,5 +1,8 @@
 package com.udacity.jdnd.course3.critter.schedule;
 
+import com.udacity.jdnd.course3.critter.pet.Pet;
+import com.udacity.jdnd.course3.critter.user.Employee;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,14 +23,18 @@ public class ScheduleController {
 
     @PostMapping
     public ScheduleDTO createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
-        return convertEntityToScheduleDTO(scheduleService.save(convertScheduleDTOToEntity(scheduleDTO)));
+        return convertEntityToScheduleDTO(scheduleService.save(convertScheduleDTOToEntity(scheduleDTO), scheduleDTO.getEmployeeIds(), scheduleDTO.getPetIds()));
     }
 
     @GetMapping
     public List<ScheduleDTO> getAllSchedules() {
-        List<ScheduleDTO> lst = scheduleService.getAllSchedules().stream().map(schedule -> convertEntityToScheduleDTO(schedule)).collect(Collectors.toList());
-
-       return lst;
+        List<Schedule> temp = scheduleService.getAllSchedules();
+        if(!temp.isEmpty()){
+            List<ScheduleDTO> lst = temp.stream().map(schedule -> {
+                return convertEntityToScheduleDTO(schedule);}).collect(Collectors.toList());
+            return lst;
+        }
+       return null;
     }
 
     @GetMapping("/pet/{petId}")
@@ -42,11 +49,9 @@ public class ScheduleController {
 
     @GetMapping("/customer/{customerId}")
     public List<ScheduleDTO> getScheduleForCustomer(@PathVariable long customerId) {
-        throw new UnsupportedOperationException();
-        //return scheduleService.getScheduleByCustomerId(customerId).stream().map(pet -> convertEntityToScheduleDTO(pet)).collect(Collectors.toList());
+        return scheduleService.getScheduleCustomerId(customerId).stream().map(pet -> convertEntityToScheduleDTO(pet)).collect(Collectors.toList());
     }
-
-    /*private static ScheduleDTO convertEntityToScheduleDTO(Schedule schedule){
+    private static ScheduleDTO convertEntityToScheduleDTO2(Schedule schedule){
         ScheduleDTO scheduleDTO = new ScheduleDTO();
         BeanUtils.copyProperties(schedule, scheduleDTO);
         return scheduleDTO;
@@ -54,26 +59,28 @@ public class ScheduleController {
 
     private static Schedule convertScheduleDTOToEntity(ScheduleDTO scheduleDTO){
         Schedule schedule = new Schedule();
-        BeanUtils.copyProperties(scheduleDTO,schedule);
-        return schedule;
-    }*/
-
-    private static ScheduleDTO convertEntityToScheduleDTO(Schedule schedule){
-        ScheduleDTO scheduleDTO = new ScheduleDTO();
-       scheduleDTO.setEmployeeIds(schedule.getEmployeeIds());
-       scheduleDTO.setActivities(schedule.getActivities());
-        scheduleDTO.setDate(schedule.getDate());
-       scheduleDTO.setPetIds(schedule.getPetIds());
-        return scheduleDTO;
-    }
-
-    private static Schedule convertScheduleDTOToEntity(ScheduleDTO scheduleDTO){
-        Schedule schedule = new Schedule();
       schedule.setActivities(scheduleDTO.getActivities());
       schedule.setDate(scheduleDTO.getDate());
-      schedule.setEmployeeIds(scheduleDTO.getEmployeeIds());
-      schedule.setPetIds(scheduleDTO.getPetIds());
         return schedule;
+    }
+
+    private static ScheduleDTO convertEntityToScheduleDTO(Schedule schedule) {
+        ScheduleDTO scheduleDTO = new ScheduleDTO();
+        scheduleDTO.setActivities(schedule.getActivities());
+        scheduleDTO.setDate(schedule.getDate());
+        if(schedule.getEmployees() == null ){
+            return scheduleDTO;
+        }
+        List<Long> employeeIds = schedule.getEmployees().stream().map(Employee::getId).collect(Collectors.toList());
+        scheduleDTO.setEmployeeIds(employeeIds);
+        if(schedule.getPets() == null){
+            return scheduleDTO;
+
+        }
+        List<Long> petIds = schedule.getPets().stream().map(Pet::getId).collect(Collectors.toList());
+        scheduleDTO.setPetIds(petIds);
+
+        return scheduleDTO;
     }
 
 }
